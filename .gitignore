@@ -1,0 +1,5 @@
+.venv
+.git
+/ricky_datasets/
+/runs/
+yolov8n.pt

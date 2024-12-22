@@ -1,0 +1,8 @@
+# Path
+path: C:\Users\makak\camp\python\week3_app_nakano\ricky_datasets
+train: images/train 
+val: images/val
+
+# Classes
+nc: 1
+names: ['broccoli']

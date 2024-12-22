@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Broccoli Measurement System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .measurement {
+            display: inline-block;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .too-small {
+            background-color: #ffcccc;
+        }
+
+        .size-m {
+            background-color: #cce5ff;
+        }
+
+        .size-l {
+            background-color: #ccffcc;
+        }
+
+        .too-large {
+            background-color: #ffe5cc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Broccoli Measurement System</h1>
+
+    <div class="upload-area">
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".jpg,.jpeg,.png">
+            <button type="submit">Upload and Process</button>
+        </form>
+    </div>
+
+    <div id="results" class="results">
+        <div id="image-result"></div>
+        <div id="measurements"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Display processed image
+                const imageResult = document.getElementById('image-result');
+                imageResult.innerHTML = `<img src="/static/${data.marked_image}" style="max-width: 100%;">`;
+
+                // Display measurements
+                const measurementsDiv = document.getElementById('measurements');
+                measurementsDiv.innerHTML = data.results.map(result => {
+                    const diameter = result.diameter;
+                    let sizeClass = 'too-small';
+                    if (diameter >= 8 && diameter < 11) sizeClass = 'size-m';
+                    else if (diameter >= 11 && diameter < 14) sizeClass = 'size-l';
+                    else if (diameter >= 14) sizeClass = 'too-large';
+
+                    return `
+                        <div class="measurement ${sizeClass}">
+                            Diameter: ${diameter.toFixed(1)} cm
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                alert('Error processing image');
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+
+</html>

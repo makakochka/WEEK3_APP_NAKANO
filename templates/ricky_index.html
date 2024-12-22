@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Broccoli Measurement System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .size-s { background-color: #ADD8E6; }
+        .size-m { background-color: #90EE90; }
+        .size-l { background-color: #FFB366; }
+        .size-2l { background-color: #FF9999; }
+        .size-xl { background-color: #DDA0DD; }
+    </style>
+</head>
+<body>
+    <h1>Broccoli Measurement System</h1>
+
+    <div class="upload-area">
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".jpg,.jpeg,.png">
+            <button type="submit">Upload and Process</button>
+        </form>
+    </div>
+
+    <div id="results" class="results">
+        <div id="image-result"></div>
+        <div id="measurements">
+            <table id="measurements-table"></table>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                // Display processed image
+                const imageResult = document.getElementById('image-result');
+                imageResult.innerHTML = `<img src="/static/${data.marked_image}" style="max-width: 100%;">`;
+
+                // Create table structure
+                const table = document.getElementById('measurements-table');
+                table.innerHTML = ''; // Clear existing content
+
+                // Add headers
+                const headerRow = document.createElement('tr');
+                Object.keys(data.results).forEach(lineName => {
+                    const th = document.createElement('th');
+                    th.textContent = lineName;
+                    headerRow.appendChild(th);
+                });
+                table.appendChild(headerRow);
+
+                // Find the maximum number of measurements in any line
+                const maxMeasurements = Math.max(...Object.values(data.results).map(line => line.length));
+
+                // Add measurement rows
+                for (let i = 0; i < maxMeasurements; i++) {
+                    const row = document.createElement('tr');
+                    
+                    Object.values(data.results).forEach(measurements => {
+                        const td = document.createElement('td');
+                        if (measurements[i]) {
+                            const m = measurements[i];
+                            td.className = `size-${m.size_category.toLowerCase()}`;
+                            td.textContent = `Diameter: ${m.diameter.toFixed(1)} cm (${m.size_category})`;
+                        }
+                        row.appendChild(td);
+                    });
+                    
+                    table.appendChild(row);
+                }
+
+            } catch (error) {
+                alert('Error processing image');
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+</html>
